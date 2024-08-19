@@ -143,7 +143,7 @@ def get_bard_response(input_text: str) -> str:
 
 def get_gemini_response(input_text: str) -> str:
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(
             input_text,
             safety_settings=[
@@ -176,7 +176,7 @@ def get_gemini_vison_response(input_text: str, img_path: str) -> str:
     try:
         img = PIL.Image.open(img_path)
         try:
-            model = genai.GenerativeModel("gemini-pro-vision")
+            model = genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content(
                 [
                     input_text,
@@ -204,7 +204,7 @@ def get_gemini_vison_response(input_text: str, img_path: str) -> str:
             response.resolve()
             responses = response.text
         except Exception as e:
-            responses = "💩 Gemini is being stupid, please try again "
+            responses = "💩 Gemini Vision is being stupid, please try again "
             logging.error(f"Error occurred while getting response from gemini: {e}")
     except Exception as e:
         responses = "💩 Something wrong with processing the media"
