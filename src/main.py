@@ -1,25 +1,28 @@
 import asyncio
 import logging
-import os
 import subprocess
+from contextlib import asynccontextmanager
 from typing import Generator
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from __version__ import __version__
 from src.bot import bot
 from src.utils import (
     BOT_NAME,
+    LOG_PATH,
     create_initial_folders,
+    get_date_time,
     initialize_logging,
     terminal_html,
 )
 
 # Initialize
-console_out = initialize_logging()
 create_initial_folders()
+console_out = initialize_logging()
+time_str = get_date_time("Asia/Ho_Chi_Minh")
 
 # Bot version
 try:
@@ -28,32 +31,34 @@ except:
     BOT_VERSION = "with unknown version"
 
 
-# API and app handling
-app = FastAPI(
-    title=BOT_NAME,
-)
-
-
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
         loop = asyncio.get_event_loop()
         background_tasks = set()
         task = loop.create_task(bot())
         background_tasks.add(task)
         task.add_done_callback(background_tasks.discard)
+        logging.info("App initiated")
     except Exception as e:
         logging.critical(f"Error occurred while starting up app: {e}")
+        raise e
+    yield
+    logging.info("Application close...")
+
+
+# API and app handling
+app = FastAPI(lifespan=lifespan, title=BOT_NAME)
 
 
 @app.get("/")
-def root() -> str:
-    return f"{BOT_NAME} {BOT_VERSION} is online"
+async def root() -> str:
+    return f"{BOT_NAME} {BOT_VERSION} is deployed on ({time_str})"
 
 
-@app.get("/health")
-def health_check() -> str:
-    return f"{BOT_NAME} {BOT_VERSION} is online"
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check() -> str:
+    return f"{BOT_NAME} {BOT_VERSION} health check"
 
 
 @app.get("/log")
@@ -88,6 +93,4 @@ async def log_check() -> StreamingResponse:
 
 # Minnion run
 if __name__ == "__main__":
-    HOST = os.getenv("HOST", "0.0.0.0")
-    PORT = os.getenv("PORT", 8080)
-    uvicorn.run(app, host=HOST, port=PORT)
+    uvicorn.run(app)
