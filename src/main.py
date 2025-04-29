@@ -8,7 +8,7 @@ import uvicorn
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from src.bot import bot
+from bot import bot
 from src.utils import (
     BOT_NAME,
     LOG_PATH,
