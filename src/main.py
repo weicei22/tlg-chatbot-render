@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from bot import bot
-from src.utils import (
+from utils import (
     BOT_NAME,
     LOG_PATH,
     create_initial_folders,
